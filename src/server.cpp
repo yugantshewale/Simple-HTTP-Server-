@@ -9,7 +9,7 @@
 #include <netdb.h>
 
 int main(int argc, char **argv) {
-  // Flush after every std::cout / std::cerr
+  // Flush after every std::cout / std::cerrdf
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
   
