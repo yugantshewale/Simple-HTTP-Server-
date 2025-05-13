@@ -8,6 +8,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+bool startsWith(const char *str, const char *prefix) {
+    return strncmp(str, prefix, strlen(prefix)) == 0;
+}
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerrdf
   std::cout << std::unitbuf;
@@ -57,10 +60,18 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
   
-  int client =accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len); // returns client file descriptor
+  int client =accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
   std::cout << "Client connected\n";
-  const char* msg = "HTTP/1.1 200 OK\r\n\r\n";
-  send(client,msg,strlen(msg),0);
+  char buffer[4096];
+  int n = read(client,buffer, sizeof buffer);
+  const char *pre = "GET / HTTP/1.1";
+  if(startsWith(buffer,pre)){
+    const char* msg = "HTTP/1.1 200 OK\r\n\r\n";
+    send(client,msg,strlen(msg),0);
+  }else{
+    const char* msg = "HTTP/1.1 404 Not Found\r\n\r\n";
+    send(client,msg,strlen(msg),0);
+  }
   close(server_fd);
   return 0;
 }
