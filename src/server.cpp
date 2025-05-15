@@ -1,16 +1,16 @@
-
 #include <iostream>
-    #include <cstdlib>
-    #include <string>
-    #include <cstring>
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <sys/socket.h>
-    #include <arpa/inet.h>
-    #include <netdb.h>
-    #include <stdlib.h>
-    #include <stdio.h>
-    char * extract_between(const char *str, const char *p1, const char *p2) {
+#include <cstdlib>
+#include <string>
+#include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+char * extract_between(const char *str, const char *p1, const char *p2) {
     const char *i1 = strstr(str, p1);
     if(i1 != NULL)
     {
@@ -31,17 +31,17 @@
     }
     return NULL;
 }
-    bool startsWith(const char *str, const char *prefix) {
-        return strncmp(str, prefix, strlen(prefix)) == 0;
-    }
-    int main(int argc, char **argv) {
+
+bool startsWith(const char *str, const char *prefix) {
+    return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+int main(int argc, char **argv) {
     // Flush after every std::cout / std::cerrdf
     std::cout << std::unitbuf;
     std::cerr << std::unitbuf;
     
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     std::cout << "Logs from your program will appear here!\n";
-    //Uncomment this block to pass the first stage
     //A socket is an endpoint of communication to which a name can be bound.
     //A socket is a combination of IP address and port number. This is required for two programs to find each other and communicate over a network
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -50,8 +50,8 @@
     //Socket types are defined in sys/socket.h. These types--SOCK_STREAM, SOCK_DGRAM, or SOCK_RAW--are supported by AF_INET and AF_UNIX.
     //AF_INET = Internet domain. send - send a message on a socket
     if (server_fd < 0) {
-    std::cerr << "Failed to create server socket\n";
-    return 1;
+        std::cerr << "Failed to create server socket\n";
+        return 1;
     }
     
     // Since the tester restarts your program quite often, setting SO_REUSEADDR
@@ -86,6 +86,7 @@
     int n = read(client,buffer, sizeof buffer -1);
     buffer[n] = '\0';
     const char *pre = "GET / HTTP/1.1";
+
     if(startsWith(buffer,pre)){
         const char* msg = "HTTP/1.1 200 OK\r\n\r\n";
         send(client,msg,strlen(msg),0);
@@ -97,11 +98,20 @@
         msg = msgop;
         send(client,msg,strlen(msg),0);
     }
+    else if(startsWith(buffer,"GET /user-agent")){
+        const char* msg;
+        char* text = extract_between(buffer,"User-Agent: ", "\r\n");
+        char* msgop;
+        asprintf(&msgop,"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %lu\r\n\r\n%s",strlen(text),text);
+        msg = msgop;
+        send(client,msg,strlen(msg),0);
+    }
     else{
         const char* msg = "HTTP/1.1 404 Not Found\r\n\r\n";
         send(client,msg,strlen(msg),0);
     }
+
     close(client);
     close(server_fd);
     return 0;
-    }
+}
